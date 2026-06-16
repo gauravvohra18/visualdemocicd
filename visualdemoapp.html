@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Cluster Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center font-sans selection:bg-cyan-500/30">
+
+    <div class="max-w-lg w-full mx-4 p-6 bg-slate-900/60 rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl"></div>
+
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-200">OpsControl <span class="text-cyan-400 font-mono text-xs ml-1 px-1.5 py-0.5 bg-cyan-950/50 rounded border border-cyan-800/30">v2.0.0</span></h1>
+                <p class="text-xs text-slate-400 mt-0.5">ArgoCD & AKS Deployment Verification</p>
+            </div>
+            <span class="flex items-center text-xs bg-slate-800 px-2.5 py-1 rounded-full text-slate-300 font-medium">
+                <span class="h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-ping"></span>
+                Live Sync
+            </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-slate-950/40 border border-slate-800/60 rounded-xl p-4">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Pipeline Health</span>
+                <span class="text-lg font-semibold text-emerald-400 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Healthy
+                </span>
+            </div>
+            <div class="bg-slate-950/40 border border-slate-800/60 rounded-xl p-4">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Target Cluster</span>
+                <span class="text-lg font-semibold text-violet-400 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    AKS-Prod
+                </span>
+            </div>
+        </div>
+
+        <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800/80 font-mono text-xs">
+            <div class="flex justify-between items-center text-slate-400 mb-3 border-b border-slate-800 pb-2">
+                <span>DIAGNOSTIC_LOGS</span>
+                <button onclick="runDiagnostics()" id="btn-run" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-2.5 py-1 rounded text-[11px] font-bold font-sans transition combined-transform active:scale-95">
+                    Run Verify
+                </button>
+            </div>
+            <div id="log-box" class="space-y-1.5 min-h-[90px] text-slate-400">
+                <div class="text-slate-500">&gt; Standing by. Click 'Run Verify' to test cluster communication...</div>
+            </div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Engine: Jenkins Workflow</span>
+            <span id="timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        // Set current time for deployment timestamp
+        document.getElementById('timestamp').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        function runDiagnostics() {
+            const btn = document.getElementById('btn-run');
+            const logBox = document.getElementById('log-box');
+            
+            btn.disabled = true;
+            btn.innerText = "Checking...";
+            
+            const logs = [
+                { text: "➔ Initiating handshake with AKS API...", delay: 0 },
+                { text: "✔ Connected to cluster: kubernetes-prod-01", delay: 600 },
+                { text: "➔ Checking ArgoCD synchronization tree...", delay: 1300 },
+                { text: "✔ Desired state matches live state perfectly.", delay: 2000 },
+                { text: "🎉 PIPELINE SUCCESS: Deployment validation complete.", delay: 2500 }
+            ];
+
+            logBox.innerHTML = '';
+
+            logs.forEach(log => {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    if(log.text.includes('✔') || log.text.includes('🎉')) {
+                        line.className = "text-emerald-400 font-semibold";
+                    } else {
+                        line.className = "text-slate-300";
+                    }
+                    line.innerText = log.text;
+                    logBox.appendChild(line);
+                    
+                    if(log.delay === 2500) {
+                        btn.disabled = false;
+                        btn.innerText = "Run Verify";
+                    }
+                }, log.delay);
+            });
+        }
+    </script>
+</body>
+</html>
