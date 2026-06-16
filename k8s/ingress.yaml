@@ -1,0 +1,42 @@
+# ===============================================
+# Ingress Controller - Frontend Pipeline Test
+# ===============================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-visualdemocicd
+  namespace: test-environment                          # Must match the namespace of your Service/Deployment
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/enable-websockets: "true"
+    
+    # Sticky Sessions (Matches production routing patterns)
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "3600"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "3600"
+    nginx.ingress.kubernetes.io/session-cookie-path: "/"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+spec:
+  ingressClassName: nginx                 # Tells AKS to process this with your Nginx Ingress Controller
+  rules:
+    - host: visualdemocicd.clouddeploy.in
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: visual-demo-app        # Points to your rewritten Service name
+                port:
+                  number: 80            # Matches Service incoming port
+
+  tls:
+    - hosts:
+        - visualdemocicd.clouddeploy.in
+      secretName: visualdemocicd-tls            # Cert-manager generates and keeps SSL certs here

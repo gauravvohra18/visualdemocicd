@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visual-demo-app
+  namespace: test-environment
+  labels:
+    app: visual-demo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: visual-demo-app
+  template:
+    metadata:
+      labels:
+        app: visual-demo-app
+    spec:
+      containers:
+      - name: visual-demo-app
+        # CHANGE: Replace 'latest' with a specific tag placeholder (e.g., v1.1)
+        # This allows Jenkins' 'sed' command to find and update the tag dynamically.
+        image: gauravohra/visualdemocicd:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+          limits:
+            cpu: "250m"
+            memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: visual-demo-app
+  namespace: test-environment # CHOSEN FIX: Explicitly added namespace to match the deployment
+spec:
+  selector:
+    app: visual-demo-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
